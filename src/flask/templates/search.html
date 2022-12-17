@@ -1,0 +1,396 @@
+<html>
+  <body>
+    <link rel="shortcut icon" href="/assets/favicon.ico">
+    <link rel="stylesheet" href="/assets/dscode.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <label for="dataset_name" class="dataset-field">Dataset Name:</label>
+        <select name="dataset_name" id="dataset_name", class="dataset_name"> 
+            <option value="" disabled selected>Choose your Dataset</option> 
+            <option value = "Population Data" class="population"> Population Data   
+            </option>  
+            <option value = "Housing Data"> Housing Data   
+            </option>  
+            <option value = "Stocks Data"> Stocks Data  
+            </option>  
+        </select> 
+    <button type="submit" name="choose" onclick="selectDataset()" class="btn">Select</button>
+    <br></br>
+
+    <div class="form-popup" id="searchFormStocks" hidden>
+        <form class="form-container">
+            <label for="method_name" class="search-by"><b>Search by</b></label>
+            <br></br>
+            <label for="stock_name" class="stock_name">Name of Stock:</label><br>
+
+            <select name="stock_name" id="stock_name">
+            </select>
+            <br></br>
+            <label for="method_name" class="method_name">Method:</label><br>
+
+            <select name="method_name" id="method_name">
+            </select>
+            <br></br>
+            <label for="attribute_name" class="attribute_name">Attribute:</label><br>
+
+            <select name="attribute_name" id="attribute_name">
+            </select>
+            <br></br>
+        
+            <button id="close" type="button" class="btn cancel" onclick="filterSearch()">Query</button>
+            <button id="close" type="button" class="btn cancel" onclick="closeSearchForm()">Close</button>
+            <br></br>
+        </form>
+        <div id="SearchTable" class="content-table"></div>
+    </div>
+
+    <div class="form-housing" id="searchFormHousing" hidden>
+        <form class="form-container">
+            <label for="search_house" class="search-house"><b>Search by</b></label>
+            <br></br>
+            <label for="state_name" class="state_name">Name of State:</label><br>
+            <select name="state_name" id="state_name">
+            </select>
+            <br></br>
+            <label for="method_name_house" class="method_name_house">Method:</label><br>
+            <select name="method_name_house" id="method_name_house">
+            </select>
+            <br></br>
+        
+            <button id="close" type="button" class="btn cancel" onclick="filterSearch()">Filter</button>
+            <button id="close" type="button" class="btn cancel" onclick="closeSearchForm()">Close</button>
+            <br></br>
+        </form>
+        <div id="SearchTable1" class="content-table"></div>
+    </div>
+
+    <style>
+
+        .dataset-field, .search-by, .stock_name, .method_name, .attribute_name, .population {
+            font: 1em Roboto, Helvetica, sans-serif;
+
+        }
+
+        select {
+            border: none;
+            -webkit-appearance: none;
+            -ms-progress-appearance: none;
+            appearance: none;
+            background: #f2f2f2;
+            padding: 12px;
+            border-radius: 3px;
+            width: 250px;
+        }
+  
+        .btn{
+        color:#fff;
+        background-color:#e74c3c;
+        outline: none;
+        border: 0;
+        color: #fff;
+        padding:10px 20px;
+        text-transform:uppercase;
+        margin-top:50px;
+        border-radius:2px;
+        cursor:pointer;
+        position:relative;
+      }
+  
+      .input-container{
+        position:relative;
+        margin-bottom:25px;
+      }
+      .input-container label{
+        position:absolute;
+        top:0px;
+        left:0px;
+        font-size:16px;
+        color:#fff;	
+        pointer-event: none;
+        transition: all 0.5s ease-in-out;
+      }
+      .input-container input{ 
+        border:0;
+        border-bottom:1px solid #555;  
+        background:transparent;
+        width:100%;
+        padding:8px 0 5px 0;
+        font-size:16px;
+        color:#fff;
+      }
+      .input-container input:focus{ 
+      border:none;	
+      outline:none;
+      border-bottom:1px solid #e74c3c;	
+      }
+
+      .center {
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+
+      .content-table  td {
+        padding: 12px 15px;
+        margin-left: auto;
+        margin-right: auto;
+        border-collapse: collapse;
+        text-align: center;
+        margin: 25px 0;
+        font-size: 0.9em;
+      }
+
+      .content-table th {
+        background-color: #994545;
+        padding: 12px;
+        color: #ffffff;
+        text-align: center;
+        font-weight: bold;
+        margin: 25px 0;
+        font-size: 0.9em;
+        min-width: 400px;
+      }
+        
+      .content-table tbody tr:nth-of-type(even) {
+        background-color: #f3f3f3;
+
+      }
+
+      .content-table tbody tr:last-of-type {
+        border-bottom: 2px solid #009879;
+      }
+
+    </style>
+
+    
+  </body>
+  <head>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript">
+      let URL_analytics= "http://127.0.0.1:5000/analytics";
+      let URL_search = "http://127.0.0.1:5000/search";
+
+      function selectDataset() {
+        var identifier = "search";
+        var dataset_option = document.getElementById("dataset_name").value;
+        var identifier = "search";
+        var searchtable_element = document.getElementById("SearchTable");
+        searchtable_element.style.display = "none";
+        if (dataset_option == "Population Data") {
+            pwd = "/usr/home/population.csv";
+        }
+        else if (dataset_option == "Housing Data") {
+            pwd = "/usr/home/house.csv";
+        }
+        else if (dataset_option == "Stocks Data") {
+            pwd = "/usr/home/stocks.csv";
+        }
+        searchForm(dataset_option);
+        getDropDownMenu(pwd, dataset_option);
+        curDir = pwd;
+        document.getElementById("close").onclick = function() {
+            filterSearch(pwd);
+        }
+      }
+      
+
+      function filterSearch(){
+        let identifier = 'search';
+        var dataset_option = document.getElementById("dataset_name").value;
+
+        if (dataset_option == "Stocks Data") {
+            var stock_name = document.getElementById("stock_name").value;
+            var method_name = document.getElementById("method_name").value;
+            var attribute_name = document.getElementById("attribute_name").value;
+            postRequestSearch(URL_search, curDir, identifier, stock_name, method_name, attribute_name).then(data => {
+                var searchTable = document.getElementById("SearchTable");
+                searchTable.style.display = "block";
+                var data_list = new Array();
+                for (const x of data) {
+
+                    data_list.push(x);
+                }
+                GenerateTable(data_list);
+            })
+        }
+
+        else if (dataset_option == "Housing Data") {
+            var state_name = document.getElementById("state_name").value;
+            var method_house_name = document.getElementById("method_name_house").value;
+            postRequestSearch(URL_search, curDir, identifier, state_name, method_house_name).then(data => {
+                var searchTable = document.getElementById("SearchTable1");
+                searchTable.style.display = "block";
+                var data_list = new Array();
+                for (const x of data) {
+                    data_list.push(x);
+                }
+                GenerateTable1(data_list);
+            }) 
+        }
+
+        else {
+            console.log("Population data is not supported");
+        }
+        
+    }
+
+    function GenerateTable(data_list) {
+        var table = document.createElement("TABLE");
+        table.border = "0";
+
+        var columnCount = data_list[0].length;
+
+        var row = table.insertRow(-1);
+        for (var i = 0; i < columnCount; i++) {
+            var headerCell = document.createElement("TH");
+            headerCell.innerHTML = data_list[0][i];
+            row.appendChild(headerCell);
+        }
+    
+        
+        for (var i = 1; i < data_list.length; i++) {
+            row = table.insertRow(-1);
+            for (var j = 0; j < columnCount; j++) {
+                var cell = row.insertCell(-1);
+                cell.innerHTML = data_list[i][j];
+            }
+        }
+
+        var SearchTable = document.getElementById("SearchTable");
+        SearchTable.innerHTML = "";
+        var headerCell = document.createElement("TH");
+        var tbody= document.createElement("TBODY");
+        SearchTable.appendChild(table);
+        SearchTable.appendChild(headerCell);
+        SearchTable.appendChild(tbody);
+        SearchTable.classList.add("content-table");
+        SearchTable.style.padding = '10px';
+    }
+
+    
+    function GenerateTable1(data_list) {
+        var table = document.createElement("TABLE");
+        table.border = "0";
+
+        var columnCount = data_list[0].length;
+
+        var row = table.insertRow(-1);
+        for (var i = 0; i < columnCount; i++) {
+            var headerCell = document.createElement("TH");
+            headerCell.innerHTML = data_list[0][i];
+            row.appendChild(headerCell);
+        }
+    
+        
+        for (var i = 1; i < data_list.length; i++) {
+            row = table.insertRow(-1);
+            for (var j = 0; j < columnCount; j++) {
+                var cell = row.insertCell(-1);
+                cell.innerHTML = data_list[i][j];
+            }
+        }
+
+        var SearchTable = document.getElementById("SearchTable1");
+        SearchTable.innerHTML = "";
+        SearchTable.appendChild(table);
+        SearchTable.classList.add("content-table");
+        SearchTable.style.padding = '20px';
+        SearchTable.style.cellpadding = '20px'; 
+    }
+
+    function getDropDownMenu(pwd, dataset_option) {
+        let identifier = "dropdown";
+        console.log("path for dropdown pwd:", pwd);
+        postRequest(URL_search, pwd, identifier).then(options => {
+            if (dataset_option == "Stocks Data") {
+                var stock_name_menus = generateDropdowns(options[0]);
+                var method_name_menus = generateDropdowns(options[1]);
+                var attribute_name_menus = generateDropdowns(options[2]);
+                document.getElementById("stock_name").innerHTML = stock_name_menus;
+                document.getElementById("method_name").innerHTML = method_name_menus;
+                document.getElementById("attribute_name").innerHTML = attribute_name_menus;
+            }
+            else if (dataset_option == "Housing Data") {
+                var state_name_menus = generateDropdowns(options[0]);
+                var method_name_house_menus = generateDropdowns(options[1]);
+                document.getElementById("state_name").innerHTML = state_name_menus;
+                document.getElementById("method_name_house").innerHTML = method_name_house_menus;
+            }
+            
+        });
+    }
+
+    function generateDropdowns(options){
+        var selectHtml = "";
+        for(var optionIndex = 0; optionIndex < options.length; optionIndex++) {
+
+            selectHtml += ("<option>" + options[optionIndex] + "</option>");
+
+        }
+        return selectHtml;
+    }
+
+    function closeSearchForm(){
+        document.getElementById("searchFormStocks").style.display = "none";
+        document.getElementById("searchFormHousing").style.display = "none";
+        var searchTable = document.getElementById("SearchTable");
+        searchTable.style.display = "none";
+    }
+
+    function searchForm(dataset_option) {
+        if (dataset_option == "Housing Data"){
+            document.getElementById("searchFormHousing").style.display = "block";
+            document.getElementById("searchFormStocks").style.display = "none";
+        }
+        else if (dataset_option == "Stocks Data"){
+            document.getElementById("searchFormStocks").style.display = "block";
+            document.getElementById("searchFormHousing").style.display = "none";
+        }
+        else{
+            document.getElementById("searchFormStocks").style.display = "block";
+        }  
+    }
+
+    async function postRequestSearch(url, id, identifier, stock_name, method_name, attribute_name){
+        let data = {"command" : id,
+                    "identifier" : identifier,
+                    "stock_name": stock_name,
+                    "method_name": method_name,
+                    "attribute_name": attribute_name};
+        let res = await fetch(url, {
+                method: 'POST',
+                headers: {
+                        'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+        });
+        if (res.ok) {
+            let ret = await res.json();
+            return ret.response;
+
+        } else {
+            return `HTTP error: ${res.status}`;
+        }
+    }
+      
+
+      async function postRequest(url, option, identifier) {
+        let data = {"command" : option,
+                    "identifier": identifier};
+        let res = await fetch(url, {
+                method: 'POST',
+                headers: {
+                        'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+        });
+        if (res.ok) {
+            let ret = await res.json();
+            return ret.response;
+
+        } else {
+            return `HTTP error: ${res.status}`;
+        }
+      }
+    </script>
+  </head>
+</html>

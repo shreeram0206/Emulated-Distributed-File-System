@@ -1,0 +1,176 @@
+<html>
+  <body>
+    <label for="dataset_name" class="dataset_name">Choose Dataset:</label>
+      <select name="dataset_name" id="dataset_name">
+        <option value = "Population Data"> Population Data   
+        </option>  
+        <option value = "Housing Data"> Housing Data   
+        </option>  
+        <option value = "Stocks Data"> Stocks Data  
+        </option>  
+      </select> 
+    <button type="submit" name="choose" onclick="selectDataset()" class="btn">Select</button>
+
+    <label for="attribute_name" class="attribute_name">Attribute Name:</label>
+    <select name="attribute_name" id="attribute_name"></select>
+
+    <button type="submit" name="choose" onclick="analyseDataset()" class="btn">Analyze</button>
+    
+    <img src = "" id="plot" alt = "Test Image" hidden/>
+    <div id="barchart_material" style="width: 900px; height: 4500px;"></div>
+
+    <style>
+
+      .dataset_name, .attribute_name {
+        font: 1em Roboto, Helvetica, sans-serif;
+
+      }
+
+      select {
+          border: none;
+          -webkit-appearance: none;
+          -ms-progress-appearance: none;
+          appearance: none;
+          background: #f2f2f2;
+          padding: 12px;
+          border-radius: 3px;
+          width: 250px;
+      }
+
+      .btn{
+      color:#fff;
+      background-color:#e74c3c;
+      outline: none;
+      border: 0;
+      color: #fff;
+      padding:10px 20px;
+      text-transform:uppercase;
+      margin-top:50px;
+      border-radius:2px;
+      cursor:pointer;
+      position:relative;
+    }
+
+    .input-container{
+      position:relative;
+      margin-bottom:25px;
+    }
+    .input-container label{
+      position:absolute;
+      top:0px;
+      left:0px;
+      font-size:16px;
+      color:#fff;	
+      pointer-event: none;
+      transition: all 0.5s ease-in-out;
+    }
+    .input-container input{ 
+      border:0;
+      border-bottom:1px solid #555;  
+      background:transparent;
+      width:100%;
+      padding:8px 0 5px 0;
+      font-size:16px;
+      color:#fff;
+    }
+    .input-container input:focus{ 
+    border:none;	
+    outline:none;
+    border-bottom:1px solid #e74c3c;	
+    }
+
+    </style>
+    
+  </body>
+  <head>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript">
+      let URL_analytics= "http://127.0.0.1:5000/analytics";
+
+      function selectDataset() {
+        let identifier = "analyze";
+        var dataset_option = document.getElementById("dataset_name").value;
+        var attribute_option = document.getElementById("attribute_name").value;
+        postRequest(URL_analytics, dataset_option, identifier).then(data => {
+          getDropDownMenu(data[0]);
+        })
+      }
+      
+      function analyseDataset() {
+        let identifier = "analyze";
+        var dataset_option = document.getElementById("dataset_name").value;
+        var attribute_option = document.getElementById("attribute_name").value;
+        if (dataset_option != "Stocks Data") {
+          postRequest(URL_analytics, dataset_option, identifier).then(data => {
+            getDropDownMenu(data[0]);
+            document.getElementById("plot").style.display = "none";
+            index = data[0].indexOf(attribute_option);
+            var dataset = data.map(d => [d[0], d[index]]);
+
+            google.charts.load('current', {'packages':['bar']});
+            google.charts.setOnLoadCallback(drawChart);
+
+            function drawChart() {
+              var data = google.visualization.arrayToDataTable(dataset);
+              var options = {
+                chart: {
+                title: 'Dataset Analysis',
+                subtitle: 'Bar charts for every attribute',
+              },
+              bars: 'horizontal' // Required for Material Bar Charts.
+            };
+
+            var chart = new google.charts.Bar(document.getElementById('barchart_material'));
+
+            chart.draw(data, google.charts.Bar.convertOptions(options));
+          }
+        
+          })
+        }
+        else {
+          postRequest(URL_analytics, dataset_option, identifier, attribute_option).then(data => {
+            document.getElementById("plot").src="./images/"+attribute_option+".png";
+            document.getElementById("plot").style.display = "block";
+          })  
+        }
+      }
+      
+      function getDropDownMenu(options) {
+        var attribute_name_menus = generateDropdowns(options);
+        document.getElementById("attribute_name").innerHTML = attribute_name_menus;
+      }
+
+      function generateDropdowns(options){
+        var selectHtml = "";
+        for(var optionIndex = 0; optionIndex < options.length; optionIndex++) {
+
+            selectHtml += ("<option>" + options[optionIndex] + "</option>");
+
+        }
+        return selectHtml;
+      }
+      
+
+      async function postRequest(url, option, identifier, attribute_option=null) {
+        let data = {"command" : option,
+                    "identifier": identifier,
+                    "attribute_option": attribute_option};
+        let res = await fetch(url, {
+                method: 'POST',
+                headers: {
+                        'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+        });
+        console.log('TEST', res, res.ok)
+        if (res.ok) {
+            let ret = await res.json();
+            return ret.response;
+
+        } else {
+            return `HTTP error: ${res.status}`;
+        }
+      }
+    </script>
+  </head>
+</html>

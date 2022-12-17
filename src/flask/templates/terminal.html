@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+<script src="https://unpkg.com/jquery.terminal/js/jquery.terminal.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/jquery.terminal/css/jquery.terminal.min.css"/>
+</head>
+<style type="text/css">
+    .terminal,span,.cmd,div { 
+        --color: rgba(0, 128, 0, 0.99);
+    }
+    .terminal, span {
+        --size: 1.4;
+    }
+</style>
+<body>
+<script>
+    let url = 'http://127.0.0.1:5000/terminal';
+    $('body').terminal({
+        mkdir: function(cmdInput) {
+            let command = "mkdir " + cmdInput;
+            doRequest(url, command).then(data => {
+                this.echo(data);
+            });
+        },
+        ls: function(cmdInput) {
+            let command = "ls " + cmdInput;
+            doRequest(url, command).then(data => {
+                this.echo(data);
+            });
+        },
+        rm: function(cmdInput) {
+            let command = "rm " + cmdInput;
+            doRequest(url, command).then(data => {
+                this.echo(data);
+            });
+        },
+        cat: function(cmdInput) {
+            let command = "cat " + cmdInput;
+            doRequest(url, command).then(data => {
+                console.log(typeof(data));
+                console.log("data:", data);
+                this.echo(data);
+            });
+        },
+        put: function(input_path, output_path, partitions) {
+            let command = "put " + input_path + " " + output_path + " " + partitions;
+            doRequest(url, command).then(data => {
+                this.echo(data);
+            })
+        }
+    }, {
+        greetings: 'Flask Terminal'
+    });
+    
+    async function doRequest(url, command) {
+        let data = {'command': command};
+
+        let res = await fetch(url, {
+                method: 'POST',
+                headers: {
+                        'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+        });
+        if (res.ok) {
+            let ret = await res.json();
+            return ret.response;
+
+        } else {
+            return `HTTP error: ${res.status}`;
+        }
+    }
+</script>
+</body>
+</html>
